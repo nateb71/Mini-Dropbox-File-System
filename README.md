@@ -1,5 +1,6 @@
-Mini Dropbox – Distributed File Synchronization System
-Overview
+# Mini Dropbox – Distributed File Synchronization System
+
+## Overview
 
 Mini Dropbox is a simplified client-server file synchronization system developed for an Introduction to Computer Networks course. The application demonstrates socket programming, process-to-process communication, and reliable file transfer using TCP.
 
@@ -7,11 +8,11 @@ The system allows multiple clients to connect to a centralized server to upload 
 
 This project is designed to highlight networking fundamentals rather than user interface complexity.
 
-Architecture
+## Architecture
 
 The system follows a client-server model:
 
-Server
+### Server
 
 Listens for incoming TCP connections
 
@@ -21,7 +22,7 @@ Stores uploaded files persistently on disk
 
 Responds to file listing, upload, and download requests
 
-Client
+### Client
 
 Connects to the server using TCP sockets
 
@@ -31,13 +32,13 @@ Reads files from a local directory for upload
 
 Writes downloaded files to a local directory
 
-Communication is divided into:
+### Communication is divided into:
 
 A control connection for commands (LIST, UPLOAD, DOWNLOAD)
 
 Dedicated file transfer connections for sending and receiving file data
 
-Features
+## Features
 
 TCP socket programming using Python
 
@@ -53,7 +54,7 @@ Command-line interface
 
 Basic error handling and file validation
 
-Technologies Used
+## Technologies Used
 
 Python 3
 
