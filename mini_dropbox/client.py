@@ -1,9 +1,30 @@
 import socket
 import os
 
-from config import CONTROL_PORT, UPLOAD_PORT, DOWNLOAD_PORT, BUFFER_SIZE
+from config import CONTROL_PORT, UPLOAD_PORT, DOWNLOAD_PORT, DISCOVERY_PORT, BUFFER_SIZE
 
-SERVER_HOST = "127.0.0.1"  # change if server is remote
+
+def discover_server(timeout=10):
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    sock.bind(("", DISCOVERY_PORT))
+    sock.settimeout(timeout)
+    print(f"[DISCOVERY] Listening for server on port {DISCOVERY_PORT} (up to {timeout}s)...")
+    try:
+        data, _ = sock.recvfrom(1024)
+        msg = data.decode()
+        if msg.startswith("MINIDROPBOX_SERVER:"):
+            ip = msg.split(":", 1)[1]
+            print(f"[DISCOVERY] Found server at {ip}")
+            return ip
+    except socket.timeout:
+        print("[DISCOVERY] No server found via broadcast.")
+        return None
+    finally:
+        sock.close()
+
+
+SERVER_HOST = discover_server() or os.environ.get("SERVER_HOST") or "127.0.0.1"
 
 
 # -----------------------------

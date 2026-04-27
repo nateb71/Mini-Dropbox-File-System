@@ -4,7 +4,9 @@ import os
 import json
 from datetime import datetime
 
-from config import CONTROL_PORT, UPLOAD_PORT, DOWNLOAD_PORT, BUFFER_SIZE, STORAGE_DIR
+import time
+
+from config import CONTROL_PORT, UPLOAD_PORT, DOWNLOAD_PORT, DISCOVERY_PORT, BUFFER_SIZE, STORAGE_DIR
 
 # Make sure the storage root folder exists when the module loads
 os.makedirs(STORAGE_DIR, exist_ok=True)
@@ -95,8 +97,8 @@ def receive_file(filename):
 
         # Build a timestamp and version number for this upload
         version_num = len(versions) + 1
-        timestamp   = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        versioned_name = f"v{version_num}_{timestamp}_{safe}"
+        timestamp   = datetime.now().strftime("%m-%d-%Y %H-%M")
+        versioned_name = f"{safe}_v{version_num}({timestamp})"
         save_path      = os.path.join(folder, versioned_name)
 
         # Read the file data in BUFFER_SIZE chunks until we have it all
@@ -232,6 +234,23 @@ def accept_loop(server_sock, name):
             break
 
 
+# Discovery broadcaster
+
+def broadcast_presence():
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+    # connect trick: routes without sending data, reveals our LAN IP
+    tmp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    tmp.connect(("8.8.8.8", 80))
+    my_ip = tmp.getsockname()[0]
+    tmp.close()
+    msg = f"MINIDROPBOX_SERVER:{my_ip}".encode()
+    print(f"[DISCOVERY] Broadcasting presence as {my_ip} on port {DISCOVERY_PORT}")
+    while True:
+        sock.sendto(msg, ("<broadcast>", DISCOVERY_PORT))
+        time.sleep(2)
+
+
 # Entry point
 
 def start_server():
@@ -260,6 +279,8 @@ def start_server():
     print(f"[SERVER] Upload   socket listening on port {UPLOAD_PORT}")
     print(f"[SERVER] Download socket listening on port {DOWNLOAD_PORT}")
     print("[SERVER] Ready — waiting for clients...\n")
+
+    threading.Thread(target=broadcast_presence, daemon=True).start()
 
     # Only the control socket needs an accept loop; upload/download sockets are
     # accepted inside receive_file / send_file which are called from handle_client
