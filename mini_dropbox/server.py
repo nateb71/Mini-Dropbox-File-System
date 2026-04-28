@@ -244,10 +244,11 @@ def broadcast_presence():
     tmp.connect(("8.8.8.8", 80))
     my_ip = tmp.getsockname()[0]
     tmp.close()
+    subnet_broadcast = ".".join(my_ip.split(".")[:3]) + ".255"
     msg = f"MINIDROPBOX_SERVER:{my_ip}".encode()
     print(f"[DISCOVERY] Broadcasting presence as {my_ip} on port {DISCOVERY_PORT}")
     while True:
-        sock.sendto(msg, ("<broadcast>", DISCOVERY_PORT))
+        sock.sendto(msg, (subnet_broadcast, DISCOVERY_PORT))
         time.sleep(2)
 
 
